@@ -1,0 +1,51 @@
+========================================================================
+  A08 . MO HINH CHUAN PYTHON - bo dem so bit 1 (population count) 8-bit
+  Khong gian dau vao: 2^8 = 256 gia tri  => quet VET CAN duoc
+========================================================================
+
+------------------------------------------------------------------------
+  Mo hinh CAY CONG == mo hinh DEM TRUC TIEP tren 256 gia tri
+------------------------------------------------------------------------
+    da so khop : 256 gia tri
+    lech       : 0
+    ==> cay cong 4 -> 2 -> 1 tinh dung population count : DUNG
+
+------------------------------------------------------------------------
+  Ca co ten . Charter muc 8 + ca tu xay dung (10 vector)
+------------------------------------------------------------------------
+    TC-001 bien duoi tuyet doi        A=00000000 | l1=0000 l2=00 | ones=0  [PASS]
+    TC-002 bien tren tuyet doi        A=11111111 | l1=2222 l2=44 | ones=8  [PASS]
+    TC-003 nua thap day               A=00001111 | l1=0022 l2=04 | ones=4  [PASS]
+    TC-004 mau xen ke                 A=10101010 | l1=1111 l2=22 | ones=4  [PASS]
+    TC-005 mot bit o vi tri cao nhat  A=10000000 | l1=1000 l2=10 | ones=1  [PASS]
+    TC-006 BIEN mot bit o vi tri 0    A=00000001 | l1=0001 l2=01 | ones=1  [PASS]
+    TC-007 nua cao day                A=11110000 | l1=2200 l2=40 | ones=4  [PASS]
+    TC-008 mau xen ke nghich          A=01010101 | l1=1111 l2=22 | ones=4  [PASS]
+    TC-009 BIEN 7 bit 1, tat bit 0    A=01111111 | l1=1222 l2=34 | ones=7  [PASS]
+    TC-010 BIEN 7 bit 1, tat bit 7    A=11111110 | l1=2221 l2=43 | ones=7  [PASS]
+
+------------------------------------------------------------------------
+  Bat bien INV-1..INV-6 tren toan bo 256 gia tri dau vao
+------------------------------------------------------------------------
+    INV-1  cay cong dung hinh dang Charter muc 10         256 lan, 0 vi pham
+    INV-2  0 <= ones <= 8                                 256 lan, 0 vi pham
+    INV-3  ones(A) + ones(~A) = 8                         256 lan, 0 vi pham
+    INV-4  ones(A) = ones(A[3:0]) + ones(A[7:4])          256 lan, 0 vi pham
+    INV-5  phan bo khop he so nhi thuc C(8,k)               1 lan, 0 vi pham
+    INV-6  ones=0 <=> A=0x00 ; ones=8 <=> A=0xFF          256 lan, 0 vi pham
+
+    Phan bo do duoc : [1, 8, 28, 56, 70, 56, 28, 8, 1]
+    He so C(8,k)    : [1, 8, 28, 56, 70, 56, 28, 8, 1]
+    Tong so gia tri : 256
+    TONG so lan kiem bat bien                            1281 lan
+
+========================================================================
+  TONG KET
+========================================================================
+  Gia tri da quet vet can  : 256
+  Vector co ten            : 10
+  Lan kiem bat bien        : 1281
+  So phep kiem             : 17
+  So phep kiem that bai    : 0
+
+  A08 REFERENCE MODEL: PASS - 17/17 phep kiem dat, 0 sai lech

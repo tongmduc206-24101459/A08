@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A08 — Bộ đếm số bit 1 (population count) 8-bit · Ghi chú thực hiện</title>
+<style>
+:root{
+  --bg:#ffffff; --fg:#1a1d21; --muted:#5c6570; --line:#e3e7eb;
+  --accent:#1f5fa9; --accent-soft:#eef4fb; --code-bg:#f5f7f9;
+  --ok:#137a4d; --ok-bg:#e8f6ee; --warn:#8a5a00; --warn-bg:#fdf4e2;
+  --bad:#a52020; --bad-bg:#fceded; --open:#7a5ba8; --open-bg:#f3eefa;
+  --maxw:960px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181c; --fg:#e6e9ec; --muted:#98a2ad; --line:#2a2f36;
+    --accent:#6fa8e0; --accent-soft:#1c2733; --code-bg:#1b1f24;
+    --ok:#5cc08d; --ok-bg:#16291f; --warn:#d8a54a; --warn-bg:#2a2314;
+    --bad:#e88b8b; --bad-bg:#2b1a1a; --open:#b79ad6; --open-bg:#241d2e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181c; --fg:#e6e9ec; --muted:#98a2ad; --line:#2a2f36;
+  --accent:#6fa8e0; --accent-soft:#1c2733; --code-bg:#1b1f24;
+  --ok:#5cc08d; --ok-bg:#16291f; --warn:#d8a54a; --warn-bg:#2a2314;
+  --bad:#e88b8b; --bad-bg:#2b1a1a; --open:#b79ad6; --open-bg:#241d2e;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 16px 96px}
+header.doc{
+  border-bottom:1px solid var(--line); margin-bottom:28px; padding:36px 0 22px;
+}
+header.doc .eyebrow{
+  font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); font-weight:600; margin-bottom:10px;
+}
+header.doc h1{font-size:clamp(24px,4.4vw,34px); line-height:1.25; margin:0 0 14px}
+.badges{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px}
+.badge{
+  font-size:12.5px; padding:3px 10px; border-radius:999px;
+  border:1px solid var(--line); color:var(--muted); background:var(--accent-soft);
+  white-space:nowrap;
+}
+.badge.ok{color:var(--ok); background:var(--ok-bg); border-color:transparent}
+.badge.warn{color:var(--warn); background:var(--warn-bg); border-color:transparent}
+.badge.bad{color:var(--bad); background:var(--bad-bg); border-color:transparent}
+.badge.open{color:var(--open); background:var(--open-bg); border-color:transparent}
+nav.toc{
+  border:1px solid var(--line); border-radius:10px; padding:16px 20px;
+  margin:0 0 32px; background:var(--accent-soft);
+}
+nav.toc p{margin:0 0 8px; font-weight:700; font-size:13px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted)}
+nav.toc ul{margin:0; padding-left:20px}
+nav.toc li{margin:3px 0}
+nav.toc a{color:var(--fg); text-decoration:none}
+nav.toc a:hover{color:var(--accent); text-decoration:underline}
+nav.toc ul ul{padding-left:18px; font-size:14.5px}
+h2{font-size:22px; margin:40px 0 12px; padding-bottom:6px; border-bottom:1px solid var(--line)}
+h3{font-size:18px; margin:28px 0 8px}
+h4{font-size:16px; margin:22px 0 6px; color:var(--muted)}
+p{margin:12px 0}
+a{color:var(--accent)}
+ul,ol{padding-left:24px}
+li{margin:4px 0}
+code{
+  font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  font-size:.9em; background:var(--code-bg); padding:1.5px 5px; border-radius:4px;
+}
+pre{
+  background:var(--code-bg); border:1px solid var(--line); border-radius:8px;
+  padding:14px 16px; overflow-x:auto; line-height:1.55; font-size:13.5px;
+}
+pre code{background:none; padding:0; font-size:inherit}
+blockquote{
+  margin:16px 0; padding:2px 18px; border-left:3px solid var(--accent);
+  background:var(--accent-soft); border-radius:0 8px 8px 0; color:var(--fg);
+}
+blockquote p{margin:10px 0}
+.tablewrap{overflow-x:auto; margin:16px 0; -webkit-overflow-scrolling:touch}
+table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:420px}
+th,td{border:1px solid var(--line); padding:7px 11px; text-align:left; vertical-align:top}
+th{background:var(--accent-soft); font-weight:650; white-space:nowrap}
+tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--code-bg) 55%, transparent)}
+hr{border:0; border-top:1px solid var(--line); margin:34px 0}
+footer.doc{
+  margin-top:56px; padding-top:18px; border-top:1px solid var(--line);
+  color:var(--muted); font-size:13.5px;
+}
+.themebtn{
+  position:fixed; right:14px; bottom:14px; z-index:10;
+  border:1px solid var(--line); background:var(--bg); color:var(--muted);
+  border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+}
+.themebtn:hover{color:var(--fg)}
+@media (max-width:640px){
+  .wrap{padding:0 16px 72px}
+  header.doc{padding:26px 0 18px}
+  nav.toc{padding:14px 16px}
+}
+@media print{
+  .themebtn{display:none}
+  nav.toc{break-inside:avoid}
+  pre,table,blockquote{break-inside:avoid}
+  body{font-size:11pt}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="doc">
+  <div class="eyebrow">RTL2GDS · Đề A08 · Ghi chú thực hiện</div>
+  <h1>A08 — Bộ đếm số bit 1 (population count) 8-bit · Ghi chú thực hiện</h1>
+  <div class="badges"><span class="badge ">🔧 Đã thiết kế lại đúng đề</span><span class="badge ">A · Số học tổ hợp</span><span class="badge ">Độ khó: Trung bình</span><span class="badge ">Loại mạch: Tổ hợp</span><span class="badge ok">Mô phỏng: PASS</span><span class="badge ">Tổng hợp: 22 cell · 0 FF</span><span class="badge ">Đường tới hạn: 1,31 ns</span><span class="badge warn">Physical design: CHƯA CHẠY</span></div>
+</header>
+<nav class="toc"><p>Mục lục</p><ul><li><a href="#1-bai-toan-nay-thuc-chat-la-gi">1. Bài toán này thực chất là gì</a></li><li><a href="#2-ban-chat-ky-thuat-co-che-hoat-dong">2. Bản chất kỹ thuật — cơ chế hoạt động</a></li><ul><li><a href="#y-tuong-goc-dem-cong">Ý tưởng gốc: đếm = cộng</a></li><li><a href="#ba-tang-moi-tang-lam-gi">Ba tầng, mỗi tầng làm gì</a></li><li><a href="#vi-sao-moi-bo-cong-lai-khong-can-ve-do-tre">Vì sao mỗi bộ cộng lại không cân về độ trễ</a></li></ul><li><a href="#3-doc-ma-nguon-rtl-lam-gi">3. Đọc mã nguồn: RTL làm gì</a></li><ul><li><a href="#ben-trong-cac-vien-gach">Bên trong các viên gạch</a></li><li><a href="#dieu-tuyet-doi-khong-duoc-viet">Điều tuyệt đối không được viết</a></li></ul><li><a href="#4-vi-sao-chon-kien-truc-nay">4. Vì sao chọn kiến trúc này</a></li><li><a href="#5-cach-thuc-hien-lo-trinh-8-buoc">5. Cách thực hiện — lộ trình 8 bước</a></li><li><a href="#6-so-lieu-that-da-do-duoc-va-cach-doc-chung">6. Số liệu thật đã đo được và cách đọc chúng</a></li><ul><li><a href="#tung-con-so-chung-minh-gi-va-khong-chung-minh-gi">Từng con số chứng minh gì — và KHÔNG chứng minh gì</a></li></ul><li><a href="#7-tra-loi-cac-cau-hoi-ky-thuat-cua-charter-muc-2">7. Trả lời các câu hỏi kỹ thuật của Charter (mục 2)</a></li><ul><li><a href="#cau-1-cay-cong-de-dem-bit-1-co-may-tang-va-moi-tang-lam-gi">Câu 1 — Cây cộng để đếm bit 1 có mấy tầng, và mỗi tầng làm gì?</a></li><li><a href="#cau-2-vi-sao-ket-qua-can-4-bit-chu-khong-phai-3">Câu 2 — Vì sao kết quả cần 4 bit chứ không phải 3?</a></li><li><a href="#cau-3-so-dien-tich-cay-cong-voi-cach-cong-tuan-tu-tung-bit-chenh-bao-nhieu">Câu 3 — So diện tích cây cộng với cách cộng tuần tự từng bit — chênh bao nhiêu?</a></li></ul><li><a href="#8-tra-loi-cau-phan-tich-rieng-charter-muc-9">8. Trả lời câu phân tích riêng (Charter mục 9)</a></li><ul><li><a href="#so-lieu-doi-chieu">Số liệu đối chiếu</a></li><li><a href="#ba-nguyen-nhan-xep-theo-muc-dong-gop">Ba nguyên nhân, xếp theo mức đóng góp</a></li><li><a href="#ket-luan-cho-charter-muc-9">Kết luận cho Charter mục 9</a></li></ul><li><a href="#9-nhung-cho-sinh-vien-hay-sai-va-cach-phat-hien">9. Những chỗ sinh viên hay sai và cách phát hiện</a></li><li><a href="#10-cau-hoi-mentor-nen-dat-khi-bao-ve">10. Câu hỏi mentor nên đặt khi bảo vệ</a></li><li><a href="#11-gioi-han-da-chung-minh-duoc-gi-chua-chung-minh-duoc-gi">11. Giới hạn: đã chứng minh được gì, chưa chứng minh được gì</a></li><ul><li><a href="#da-chung-minh">Đã chứng minh</a></li><li><a href="#chua-chung-minh">Chưa chứng minh</a></li><li><a href="#ngoai-pham-vi-khong-duoc-khang-dinh">Ngoài phạm vi — không được khẳng định</a></li></ul></ul></nav>
+<main>
+<hr>
+<h2 id="1-bai-toan-nay-thuc-chat-la-gi">1. Bài toán này thực chất là gì</h2>
+<p>Bề mặt: "đếm xem trong 8 bit có bao nhiêu bit bằng 1". Một dòng Python.</p>
+<p>Thực chất, Charter chọn A08 vì nó là ví dụ sạch nhất cho một điều rất khó dạy:
+<strong>có những phép tính mà cách viết ra nó quan trọng hơn kết quả của nó.</strong></p>
+<p>Với cộng hay nhân, viết <code>a + b</code> rồi để công cụ chọn kiến trúc thường là lựa chọn đúng trong
+công việc thật. Với A08, Charter mục 10 gọi thẳng chỗ hay tắc:</p>
+<blockquote>
+<p><em>"Viết vòng <code>for</code> ở mức hành vi — đề yêu cầu dựng cây cộng để netlist đọc được."</em></p>
+</blockquote>
+<p>Cụm <strong>"để netlist đọc được"</strong> là toàn bộ nội dung đề bài. Một dòng <code>$countones(a)</code> cho kết
+quả đúng 256/256, tổng hợp được, chạy được — và <strong>vô dụng về mặt giảng dạy</strong>, vì không còn
+gì để đếm tầng, không còn gì để đối chiếu với STA, không trả lời được mục 2 lẫn mục 9.</p>
+<p>Bối cảnh ứng dụng — hệ 8 cảm biến báo động — không phải trang trí. Nó giải thích vì sao đầu
+ra là <strong>một con số</strong> chứ không phải 8 đường riêng: logic quyết định cần biết "bao nhiêu
+kênh đang báo" (sự kiện vật lý lớn làm nhiều kênh cùng báo; nhiễu chỉ làm một kênh báo).</p>
+<h2 id="2-ban-chat-ky-thuat-co-che-hoat-dong">2. Bản chất kỹ thuật — cơ chế hoạt động</h2>
+<h3 id="y-tuong-goc-dem-cong">Ý tưởng gốc: đếm = cộng</h3>
+<p>Đếm số bit 1 chính là <strong>cộng cả 8 bit lại với nhau</strong>, vì mỗi bit đúng bằng 0 hoặc 1:</p>
+<pre><code>ones = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7]
+</code></pre>
+<p>Câu hỏi thiết kế không phải "cộng cái gì" mà <strong>"cộng theo thứ tự nào"</strong>. Hai cách xếp thứ
+tự cho cùng kết quả nhưng khác hẳn về phần cứng:</p>
+<pre><code> Chuỗi thẳng:  ((((((( a0+a1 )+a2 )+a3 )+a4 )+a5 )+a6 )+a7 )     độ sâu O(N) = 7 bước
+ Cây cộng:     ((a0+a1)+(a2+a3)) + ((a4+a5)+(a6+a7))             độ sâu O(log N) = 3 bước
+</code></pre>
+<p>Phép cộng có tính <strong>kết hợp</strong>, nên đổi cách đặt ngoặc không đổi kết quả — nhưng đổi hẳn
+hình dạng mạch. Cây cộng khai thác đúng tính chất đó.</p>
+<h3 id="ba-tang-moi-tang-lam-gi">Ba tầng, mỗi tầng làm gì</h3>
+<pre><code> TẦNG 1 — 4 bộ cộng 1-bit (half adder), CHẠY SONG SONG
+   Việc: gộp 8 bit đơn thành 4 số 2-bit.    Dải kết quả: 0..2
+   l1_0 = a[0]+a[1]   l1_1 = a[2]+a[3]   l1_2 = a[4]+a[5]   l1_3 = a[6]+a[7]
+
+ TẦNG 2 — 2 bộ cộng 2-bit, CHẠY SONG SONG
+   Việc: gộp 4 số thành 2 số 3-bit.         Dải kết quả: 0..4
+   l2_0 = l1_0+l1_1  ← số kênh báo ở NỬA THẤP a[3:0]
+   l2_1 = l1_2+l1_3  ← số kênh báo ở NỬA CAO  a[7:4]
+
+ TẦNG 3 — 1 bộ cộng 3-bit
+   Việc: gộp 2 số thành 1 số 4-bit.         Dải kết quả: 0..8
+   ones = l2_0 + l2_1
+</code></pre>
+<p>Quy luật bất biến qua các tầng: <strong>số toán hạng giảm một nửa, độ rộng tăng đúng 1 bit.</strong>
+Sau <code>log₂ 8 = 3</code> tầng còn 1 toán hạng, rộng <code>1 + 3 = 4</code> bit.</p>
+<p>Điểm tinh tế: các giá trị trung gian <strong>có ý nghĩa vật lý đọc được</strong>. <code>l2_0</code> đúng bằng số
+cảm biến đang báo ở nửa thấp. Đây không phải sản phẩm phụ — đó là điều làm netlist "đọc
+được", và là cách testbench kiểm được <strong>cấu trúc</strong> chứ không chỉ kiểm <strong>kết quả</strong>.</p>
+<h3 id="vi-sao-moi-bo-cong-lai-khong-can-ve-do-tre">Vì sao mỗi bộ cộng lại không cân về độ trễ</h3>
+<p>Mỗi "tầng" từ số 2 trở đi <strong>tự nó là một bộ cộng ripple</strong>:</p>
+<pre><code> bộ cộng 2-bit : HA(vị trí 0) ─ c0 ─▶ FA(vị trí 1)            chuỗi carry dài 2
+ bộ cộng 3-bit : HA(vị trí 0) ─ c0 ─▶ FA(vị trí 1) ─ c1 ─▶ FA(vị trí 2)   chuỗi carry dài 3
+</code></pre>
+<p>Nên "cây cộng 3 tầng" <strong>không</strong> có nghĩa "3 tầng cổng". Đây là hạt nhân của câu hỏi Charter
+mục 9, trả lời đầy đủ ở §8.</p>
+<h2 id="3-doc-ma-nguon-rtl-lam-gi">3. Đọc mã nguồn: RTL làm gì</h2>
+<p>Toàn bộ kiến trúc nằm trong 7 dòng instantiate:</p>
+<pre><code class="language-systemverilog">// TANG 1 — 4 bo cong 1-bit (half adder), hoan toan song song
+a08_half_adder u_l1_0 (.x(a[0]), .y(a[1]), .s(l1_0[0]), .c(l1_0[1]));
+a08_half_adder u_l1_1 (.x(a[2]), .y(a[3]), .s(l1_1[0]), .c(l1_1[1]));
+a08_half_adder u_l1_2 (.x(a[4]), .y(a[5]), .s(l1_2[0]), .c(l1_2[1]));
+a08_half_adder u_l1_3 (.x(a[6]), .y(a[7]), .s(l1_3[0]), .c(l1_3[1]));
+
+// TANG 2 — 2 bo cong 2-bit
+a08_add2 u_l2_0 (.p(l1_0), .q(l1_1), .s(l2_0));
+a08_add2 u_l2_1 (.p(l1_2), .q(l1_3), .s(l2_1));
+
+// TANG 3 — 1 bo cong 3-bit
+a08_add3 u_l3_0 (.p(l2_0), .q(l2_1), .s(ones));
+</code></pre>
+<p>Bốn điểm cần giảng kỹ:</p>
+<ol>
+<li>
+<p><strong><code>{c, s}</code> của half adder LÀ một số 2 bit.</strong> Sinh viên quen nghĩ <code>s</code> là "tổng" và <code>c</code> là
+   "bit nhớ" — hai thứ riêng. Ở đây phải đọc chúng là <strong>một số nhị phân hai bit</strong>:
+   <code>{c,s} = 00, 01, 10</code> tương ứng <code>0, 1, 2</code>. Giá trị <code>11 = 3</code> <strong>không bao giờ</strong> xảy ra.
+   Không nhìn ra điều này thì không hiểu vì sao tầng 2 nhận toán hạng 2-bit.</p>
+</li>
+<li>
+<p><strong>Vị trí 0 dùng half adder, không dùng full adder.</strong> Vì không có carry vào. Mỗi lần thay
+   được FA bằng HA là tiết kiệm <code>33,7824 − 15,0144 = 18,768 µm²</code> — và thiết kế làm việc đó
+   ở <strong>3</strong> chỗ (trong hai <code>add2</code> và một <code>add3</code>).</p>
+</li>
+<li>
+<p><strong><code>s[2] = c1</code> và <code>s[3] = c2</code> chỉ là dây nối, 0 cổng.</strong> Bit cao nhất của mỗi bộ cộng chính
+   là carry ra của mắt xích cuối. Netlist xác nhận: không có cell nào sinh ra hai bit đó.</p>
+</li>
+<li>
+<p><strong>Độ rộng bit không đồng nhất giữa các tầng (2 → 3 → 4).</strong> Đây là điểm khác hẳn một bộ
+   cộng thông thường, nơi mọi tầng đều rộng bằng nhau. Cắt độ rộng tối thiểu ở từng tầng là
+   một phần của thiết kế, không phải chi tiết vụn.</p>
+</li>
+</ol>
+<h3 id="ben-trong-cac-vien-gach">Bên trong các viên gạch</h3>
+<pre><code class="language-systemverilog">// half adder: hai cong SONG SONG, c khong cho s
+assign s = x ^ y;
+assign c = x &amp; y;
+
+// full adder: cout la ham DA SO (majority) cua ba bit vao
+assign s    = x ^ y ^ cin;
+assign cout = (x &amp; y) | (x &amp; cin) | (y &amp; cin);
+</code></pre>
+<p>Nhận ra <code>cout</code> là hàm majority giải thích vì sao <code>abc</code> ánh xạ nó thành đúng <strong>một</strong> cell
+<code>sky130_fd_sc_hd__maj3_1</code> — thư viện có sẵn cổng đó.</p>
+<h3 id="dieu-tuyet-doi-khong-duoc-viet">Điều tuyệt đối không được viết</h3>
+<pre><code class="language-systemverilog">assign ones = $countones(a);                              // ❌ CẤM
+assign ones = a[0]+a[1]+a[2]+a[3]+a[4]+a[5]+a[6]+a[7];    // ❌ CẤM
+always_comb begin ones = 0; for (i=0;i&lt;8;i++) ones += a[i]; end  // ❌ CẤM
+</code></pre>
+<p>Dòng thứ ba là chỗ Charter mục 10 gọi đích danh. Cả ba đều cho kết quả đúng, đều tổng hợp
+được — và đều <strong>xoá mất chính thứ đề bài yêu cầu quan sát</strong>. Các toán tử tắt chỉ được dùng
+trong <code>05_VERIFICATION/golden_model/</code>, nơi chúng là chuẩn so sánh <strong>độc lập</strong>.</p>
+<h2 id="4-vi-sao-chon-kien-truc-nay">4. Vì sao chọn kiến trúc này</h2>
+<p>Không phải vì cây cộng "tốt hơn mọi mặt" — số liệu ở §6 cho thấy nó <strong>không</strong> nhỏ hơn trong
+flow nộp bài. Ba lý do thật, xếp theo sức nặng:</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Lý do</th>
+<th>Nội dung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Charter chốt</td>
+<td>Mục 10 ghi thẳng hình dạng "4 bộ cộng 1-bit → 2 bộ cộng 2-bit → 1 bộ cộng 3-bit". Mục 2 và mục 9 đều hỏi <strong>về cây cộng</strong>. Làm khác là trả lời một đề khác.</td>
+</tr>
+<tr>
+<td>2. Nhanh hơn ở mọi flow</td>
+<td>1,31 ns so với 1,75 ns (giữ phân cấp); 0,76 ns so với 1,52 ns (flatten). Đây là chỉ số duy nhất <strong>không đổi dấu</strong> giữa hai flow.</td>
+</tr>
+<tr>
+<td>3. Mở rộng tốt hơn</td>
+<td>Độ sâu <code>O(log N)</code> so với <code>O(N)</code>. Ở <code>N=8</code> chênh 3 so với 7; ở <code>N=32</code> chênh 5 so với 31.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Và với <strong>ứng dụng</strong> cụ thể (giám sát 8 cảm biến, tốc độ lấy mẫu cỡ kHz), cả hai kiến trúc
+đều thừa sức nhanh. Ở đây kiến trúc được chọn vì <strong>yêu cầu đề bài về khả năng giải thích</strong>,
+không phải vì ràng buộc thời gian của ứng dụng. Nói thẳng điều đó trung thực hơn là dựng
+một lý do kỹ thuật không có thật. So sánh đầy đủ bốn kiến trúc: <code>03_ARCHITECTURE/tradeoff.md</code>.</p>
+<h2 id="5-cach-thuc-hien-lo-trinh-8-buoc">5. Cách thực hiện — lộ trình 8 bước</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Bước</th>
+<th>Công cụ</th>
+<th>Bằng chứng sinh ra</th>
+<th>Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><strong>Phát hiện gói nguồn thuộc đề khác</strong>, đóng băng bản gốc</td>
+<td>đọc mã + đối chiếu Charter</td>
+<td><code>08_ORIGINAL_SOURCE/</code>, <code>05_VERIFICATION/known_issues.md</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Suy bảng hành vi + <strong>ràng buộc cấu trúc</strong> từ Charter mục 8 và mục 10</td>
+<td>—</td>
+<td><code>02_SPECIFICATION/functional_spec.md</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Viết mô hình chuẩn Python độc lập (2 cách nghĩ: đếm trực tiếp + mô phỏng cây)</td>
+<td>CPython 3</td>
+<td><code>golden_model/reference_model.py</code></td>
+<td>✅ PASS, thoát 0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Viết RTL với cây cộng <strong>tường minh</strong>, giữ phân cấp module</td>
+<td>—</td>
+<td><code>04_IMPLEMENTATION/rtl/</code> (2 file)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Viết testbench tự kiểm: 2 golden SV + kiểm <strong>net nội bộ</strong> (INV-1) + quét vét cạn</td>
+<td>Icarus Verilog 12.0</td>
+<td><code>simulation.log</code></td>
+<td>✅ 266 vector / 0 lỗi</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Tổng hợp lên sky130, <strong>kiểm 0 flip-flop</strong></td>
+<td>Yosys 0.33</td>
+<td><code>synth_stat.txt</code></td>
+<td>✅ 22 cell, <strong>0 FF</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Đo độ sâu logic thật (<code>ltp</code>) và đối chiếu với lý thuyết 3 tầng</td>
+<td>Yosys 0.33</td>
+<td>§8 tài liệu này</td>
+<td>✅ 3 module / <strong>5 cell</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td>STA với clock ảo, <strong>đếm cell trên đường tới hạn</strong></td>
+<td>OpenSTA</td>
+<td><code>03_ARCHITECTURE/datapath.md</code> §4</td>
+<td>✅ 1,31 ns, 5 cell</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Physical design RTL→GDSII</td>
+<td>LibreLane + sky130A</td>
+<td><code>06_GDSII/</code></td>
+<td>⬜ chưa chạy</td>
+</tr>
+</tbody>
+</table></div>
+<p>Bước 0 là bước không có trong lộ trình chuẩn — nó tồn tại vì sự cố lệch nguồn. Xem
+<code>05_VERIFICATION/known_issues.md</code> và <code>08_ORIGINAL_SOURCE/PATCHLOG.md</code>.</p>
+<h2 id="6-so-lieu-that-da-do-duoc-va-cach-doc-chung">6. Số liệu thật đã đo được và cách đọc chúng</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Chỉ số</th>
+<th style="text-align: right;">Giá trị</th>
+<th>Công cụ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mô hình chuẩn Python</td>
+<td style="text-align: right;"><strong>PASS</strong>, thoát mã 0</td>
+<td>CPython 3</td>
+</tr>
+<tr>
+<td>Vector kiểm chứng</td>
+<td style="text-align: right;"><strong>266 chạy / 0 lỗi</strong> (10 ca có tên + 256 vét cạn)</td>
+<td>Icarus Verilog 12.0</td>
+</tr>
+<tr>
+<td>Vi phạm bất biến INV-1…INV-6</td>
+<td style="text-align: right;"><strong>0</strong></td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>Số cell</td>
+<td style="text-align: right;"><strong>22</strong></td>
+<td>Yosys 0.33 + <code>sky130_fd_sc_hd</code></td>
+</tr>
+<tr>
+<td><strong>Flip-flop</strong></td>
+<td style="text-align: right;"><strong>0</strong></td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>Diện tích</td>
+<td style="text-align: right;"><strong>240,2304 µm²</strong></td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>Phân bố cell</td>
+<td style="text-align: right;"><code>xor2_1</code>×7 · <code>and2_0</code>×7 · <code>xor3_1</code>×4 · <code>maj3_1</code>×4</td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>Độ sâu — bước module</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td>Yosys <code>ltp -noff</code></td>
+</tr>
+<tr>
+<td>Độ sâu — tầng cell thật</td>
+<td style="text-align: right;"><strong>5</strong></td>
+<td>Yosys <code>ltp -noff</code> sau <code>flatten</code></td>
+</tr>
+<tr>
+<td>Đường tới hạn</td>
+<td style="text-align: right;"><code>a[6] → ones[3]</code></td>
+<td>OpenSTA</td>
+</tr>
+<tr>
+<td><strong>Độ trễ tổ hợp</strong></td>
+<td style="text-align: right;"><strong>1,31 ns</strong>, qua 5 cell</td>
+<td>OpenSTA</td>
+</tr>
+<tr>
+<td>Đường nhanh nhất</td>
+<td style="text-align: right;"><code>a[7] → ones[0]</code>, <strong>0,29 ns</strong>, 3 cell</td>
+<td>OpenSTA</td>
+</tr>
+<tr>
+<td>Slack / WNS / TNS</td>
+<td style="text-align: right;">8,69 ns · 0,00 · 0,00 (clock ảo 10 ns)</td>
+<td>OpenSTA</td>
+</tr>
+<tr>
+<td>Công suất</td>
+<td style="text-align: right;"><strong>17,5 µW</strong> — tổ hợp <strong>100 %</strong>, tuần tự <strong>0 %</strong></td>
+<td>OpenSTA</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="tung-con-so-chung-minh-gi-va-khong-chung-minh-gi">Từng con số chứng minh gì — và KHÔNG chứng minh gì</h3>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Con số</th>
+<th><strong>Chứng minh</strong></th>
+<th><strong>KHÔNG chứng minh</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>256/256 khớp</td>
+<td>Hàm của DUT <strong>tương đương</strong> golden model. Không còn ca hành vi nào chưa kiểm.</td>
+<td>Kiến trúc là cây cộng. Một dòng <code>$countones</code> cũng PASS hết.</td>
+</tr>
+<tr>
+<td>INV-1 · 0 vi phạm</td>
+<td>Cây cộng có <strong>đúng hình dạng</strong> Charter mục 10 — testbench đọc thẳng <code>l1_*</code>, <code>l2_*</code> và kiểm từng tầng</td>
+<td>Netlist sau ánh xạ cell vẫn giữ hình dạng đó (cần mô phỏng gate-level)</td>
+</tr>
+<tr>
+<td><strong>0 flip-flop</strong></td>
+<td>Đúng phân loại Tổ hợp, xác nhận bởi <strong>hai nguồn độc lập</strong> (bảng cell Yosys + <code>report_power</code> Sequential = 0 %)</td>
+<td>Netlist tương đương RTL về chức năng</td>
+</tr>
+<tr>
+<td>22 cell · 240,23 µm²</td>
+<td>Thiết kế <strong>nhỏ</strong> — dưới ước lượng 90–140 cell của Charter tới ~4×</td>
+<td>Diện tích sau P&amp;R (sẽ khác vì có dây và cell bị <code>dont_use</code>)</td>
+</tr>
+<tr>
+<td>1,31 ns</td>
+<td>Độ trễ <strong>sau tổng hợp</strong>, góc <code>tt_025C_1v80</code></td>
+<td>Độ trễ thật sau routing (sẽ <strong>lớn hơn</strong>, chưa có RC dây)</td>
+</tr>
+<tr>
+<td>5 tầng cell</td>
+<td>Độ sâu logic thật của netlist nộp bài</td>
+<td>Rằng đây là độ sâu tối thiểu có thể đạt (bản flatten chỉ còn 4)</td>
+</tr>
+<tr>
+<td>17,5 µW</td>
+<td>Thứ tự độ lớn công suất</td>
+<td>Công suất thật của ứng dụng — dùng activity mặc định, không lấy từ VCD</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="7-tra-loi-cac-cau-hoi-ky-thuat-cua-charter-muc-2">7. Trả lời các câu hỏi kỹ thuật của Charter (mục 2)</h2>
+<h3 id="cau-1-cay-cong-de-dem-bit-1-co-may-tang-va-moi-tang-lam-gi">Câu 1 — Cây cộng để đếm bit 1 có mấy tầng, và mỗi tầng làm gì?</h3>
+<p><strong>Ba tầng.</strong> Bằng chứng cấu trúc: bảng phân cấp Yosys in ra đúng <code>4 × a08_half_adder</code>
+(mức đỉnh) + <code>2 × a08_add2</code> + <code>1 × a08_add3</code>.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Tầng</th>
+<th>Thành phần</th>
+<th>Vào</th>
+<th>Ra</th>
+<th>Việc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>4 bộ cộng 1-bit (half adder)</td>
+<td>8 bit đơn</td>
+<td>4 số 2-bit, dải 0…2</td>
+<td>Gộp từng cặp bit kề nhau</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2 bộ cộng 2-bit</td>
+<td>4 số 2-bit</td>
+<td>2 số 3-bit, dải 0…4</td>
+<td>Đếm riêng nửa thấp <code>a[3:0]</code> và nửa cao <code>a[7:4]</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>1 bộ cộng 3-bit</td>
+<td>2 số 3-bit</td>
+<td>1 số 4-bit, dải 0…8</td>
+<td>Cộng hai nửa lại</td>
+</tr>
+</tbody>
+</table></div>
+<p>Quy luật chung: <strong>mỗi tầng giảm một nửa số toán hạng và tăng đúng 1 bit độ rộng.</strong></p>
+<h3 id="cau-2-vi-sao-ket-qua-can-4-bit-chu-khong-phai-3">Câu 2 — Vì sao kết quả cần 4 bit chứ không phải 3?</h3>
+<p>Vì số bit 1 trong 8 bit nhận <strong>9</strong> giá trị (<code>0…8</code>), mà 3 bit chỉ biểu diễn được 8 giá trị
+(<code>0…7</code>). Thiếu đúng <strong>một</strong> giá trị: <code>8 = 4'b1000</code>.</p>
+<p>Công thức tổng quát: đếm bit 1 trên <code>N</code> bit cần <code>⌈log₂(N+1)⌉</code> bit — chú ý là <code>N+1</code>, không
+phải <code>N</code>. Với <code>N = 8</code>: <code>⌈log₂ 9⌉ = 4</code>.</p>
+<p>Bằng chứng thực nghiệm từ chính bộ dữ liệu đã chạy: trong 256 giá trị đầu vào, <strong>đúng một</strong>
+giá trị (<code>0xFF</code>) làm <code>ones = 8</code>. Phân bố đầy đủ, khớp hệ số nhị thức <code>C(8,k)</code>:</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th><code>ones</code></th>
+<th style="text-align: right;">0</th>
+<th style="text-align: right;">1</th>
+<th style="text-align: right;">2</th>
+<th style="text-align: right;">3</th>
+<th style="text-align: right;">4</th>
+<th style="text-align: right;">5</th>
+<th style="text-align: right;">6</th>
+<th style="text-align: right;">7</th>
+<th style="text-align: right;">8</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Số giá trị</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;"><strong>70</strong></td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;"><strong>1</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Hệ quả thực tiễn: lỗi cắt kết quả còn 3 bit chỉ lộ ra ở <strong>1/256 = 0,39 %</strong> số vector. Kiểm
+thử ngẫu nhiên hoàn toàn có thể bỏ sót; quét vét cạn thì không. Đó là lý do <code>0xFF</code> nằm
+trong nhóm ca <strong>bắt buộc</strong> của Charter mục 8.</p>
+<h3 id="cau-3-so-dien-tich-cay-cong-voi-cach-cong-tuan-tu-tung-bit-chenh-bao-nhieu">Câu 3 — So diện tích cây cộng với cách cộng tuần tự từng bit — chênh bao nhiêu?</h3>
+<p>Đã dựng biến thể "cộng tuần tự từng bit" (chuỗi 7 bộ cộng nối tiếp, độ rộng cắt tối thiểu
+từng tầng) và chạy <strong>cùng script, cùng thư viện, cùng góc</strong>. Mã nguồn đầy đủ để tái lập:
+<code>03_ARCHITECTURE/tradeoff.md</code> §3.4.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Chỉ số</th>
+<th style="text-align: right;">Cây cộng (nộp bài)</th>
+<th style="text-align: right;">Cộng tuần tự từng bit</th>
+<th>Chênh</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Số cell</td>
+<td style="text-align: right;"><strong>22</strong></td>
+<td style="text-align: right;">30</td>
+<td>+36,4 %</td>
+</tr>
+<tr>
+<td>Diện tích</td>
+<td style="text-align: right;">240,2304 µm²</td>
+<td style="text-align: right;"><strong>201,4432 µm²</strong></td>
+<td>cây cộng <strong>lớn hơn 19,3 %</strong></td>
+</tr>
+<tr>
+<td>Đường tới hạn</td>
+<td style="text-align: right;"><strong>1,31 ns</strong></td>
+<td style="text-align: right;">1,75 ns</td>
+<td>cây cộng <strong>nhanh hơn 25,1 %</strong></td>
+</tr>
+<tr>
+<td>Cell trên đường tới hạn</td>
+<td style="text-align: right;"><strong>5</strong></td>
+<td style="text-align: right;">12</td>
+<td>2,4×</td>
+</tr>
+<tr>
+<td>Công suất</td>
+<td style="text-align: right;"><strong>17,5 µW</strong></td>
+<td style="text-align: right;">23,2 µW</td>
+<td>+32,6 %</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Câu trả lời trung thực: trong flow nộp bài, cây cộng KHÔNG nhỏ hơn — nó lớn hơn 19,3 %
+về diện tích, đổi lại nhanh hơn 25,1 % và tốn ít công suất hơn 24,6 %.</strong></p>
+<p>Nhưng dấu của chênh lệch diện tích <strong>đảo ngược</strong> nếu thêm một bước <code>flatten</code> vào flow:</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Flow</th>
+<th style="text-align: right;">Cây cộng</th>
+<th style="text-align: right;">Chuỗi thẳng</th>
+<th>Ai nhỏ hơn?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Giữ phân cấp (nộp bài)</td>
+<td style="text-align: right;">240,2304 µm²</td>
+<td style="text-align: right;">201,4432 µm²</td>
+<td>chuỗi thẳng, −16,1 %</td>
+</tr>
+<tr>
+<td>Thêm <code>flatten</code></td>
+<td style="text-align: right;"><strong>163,9072 µm²</strong></td>
+<td style="text-align: right;">226,4672 µm²</td>
+<td><strong>cây cộng, −27,6 %</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Nguyên nhân và cách đọc: §8 dưới đây và <code>tradeoff.md</code> §5. Một caveat bắt buộc nêu kèm: biến
+thể chuỗi thẳng dùng 5 cell <code>lpflow_isobufsrc_1</code>, vốn nằm trong <code>dont_use</code> của cấu hình
+LibreLane sky130 mặc định; chưa đo lại được khi cấm nhóm cell đó vì Yosys 0.33 không có
+tuỳ chọn tương ứng cho <code>abc</code>.</p>
+<h2 id="8-tra-loi-cau-phan-tich-rieng-charter-muc-9">8. Trả lời câu phân tích riêng (Charter mục 9)</h2>
+<blockquote>
+<p><em>"Cây cộng có độ sâu log₂(8) = 3 tầng. Đối chiếu với số tầng logic thực tế trong báo cáo
+STA và giải thích vì sao con số thực tế thường lớn hơn con số lý thuyết."</em></p>
+</blockquote>
+<h3 id="so-lieu-doi-chieu">Số liệu đối chiếu</h3>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Cách đếm</th>
+<th style="text-align: right;">Con số</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lý thuyết</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td><code>log₂ 8</code></td>
+</tr>
+<tr>
+<td>Bước module trên netlist giữ phân cấp</td>
+<td style="text-align: right;"><strong>3</strong></td>
+<td>Yosys <code>ltp -noff</code>: <code>a[7] → u_l1_3 → u_l2_1 → u_l3_0</code></td>
+</tr>
+<tr>
+<td>Tầng cell thật (netlist nộp bài)</td>
+<td style="text-align: right;"><strong>5</strong></td>
+<td>Yosys <code>ltp -noff</code> sau <code>flatten</code></td>
+</tr>
+<tr>
+<td>Cell trên đường tới hạn trong <strong>báo cáo STA</strong></td>
+<td style="text-align: right;"><strong>5</strong></td>
+<td>OpenSTA <code>report_checks -path_delay max</code></td>
+</tr>
+<tr>
+<td>Tầng cell thật (netlist đã flatten trước khi ánh xạ)</td>
+<td style="text-align: right;"><strong>4</strong></td>
+<td>Yosys <code>ltp -noff</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Thực tế 5, lý thuyết 3 — lớn hơn 67 %.</strong> Hai phép đo độc lập (Yosys <code>ltp</code> và OpenSTA)
+cho cùng con số 5, nên đây không phải tạo tác của một công cụ.</p>
+<p>Đường tới hạn thật, chép từ OpenSTA:</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th style="text-align: right;">#</th>
+<th>Cell</th>
+<th>Instance</th>
+<th style="text-align: right;">Delay (ns)</th>
+<th style="text-align: right;">Cộng dồn (ns)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td><code>xor2_1</code></td>
+<td><code>u_l1_3/_1_</code></td>
+<td style="text-align: right;">0,17</td>
+<td style="text-align: right;">0,17</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td><code>and2_0</code></td>
+<td><code>u_l2_1/u_ha0/_0_</code></td>
+<td style="text-align: right;">0,19</td>
+<td style="text-align: right;">0,36</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td><code>xor3_1</code></td>
+<td><code>u_l2_1/u_fa1/_1_</code></td>
+<td style="text-align: right;">0,26</td>
+<td style="text-align: right;">0,62</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td><code>maj3_1</code></td>
+<td><code>u_l3_0/u_fa1/_0_</code></td>
+<td style="text-align: right;">0,37</td>
+<td style="text-align: right;">0,98</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td><code>maj3_1</code></td>
+<td><code>u_l3_0/u_fa2/_0_</code></td>
+<td style="text-align: right;">0,33</td>
+<td style="text-align: right;"><strong>1,31</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="ba-nguyen-nhan-xep-theo-muc-dong-gop">Ba nguyên nhân, xếp theo mức đóng góp</h3>
+<p><strong>① Nguyên nhân chính — "một tầng cây" không phải "một tầng cổng".</strong>
+Con số 3 đếm <strong>tầng của cây</strong>. Nhưng tầng 2 và tầng 3 <strong>tự chúng là bộ cộng ripple</strong> có
+chuỗi carry bên trong: <code>add2</code> sâu 2 mắt xích, <code>add3</code> sâu 3 mắt xích. Đọc theo cấu trúc:</p>
+<pre><code> tầng 1 đóng góp 1 tầng cổng  (half adder: 1 cổng)
+ tầng 2 đóng góp 2 tầng cổng  (HA → FA qua c0)
+ tầng 3 đóng góp 3 tầng cổng  (HA → FA → FA qua c0, c1)
+ ───────────────────────────
+ cộng thẳng                   = 6 tầng cổng
+</code></pre>
+<p><strong>② Nguyên nhân làm con số nhỏ hơn 6 — bit thấp ra sớm.</strong>
+Đo được là <strong>5</strong>, ít hơn ước lượng 6 đúng một tầng, vì chuỗi carry của <code>add3</code> <strong>không khởi
+động muộn nhất</strong>: <code>u_ha0</code> chỉ cần <code>l2_0[0]</code> và <code>l2_1[0]</code> — hai bit <strong>thấp nhất</strong>, sẵn sàng
+ở tầng cổng thứ 2, sớm hơn <code>l2_*[2]</code> (tầng 3) một nhịp. Tầng sau đã "chạy đà" trong lúc bit
+cao còn đang tính. Đây là hiệu ứng <strong>chỉ thấy khi phân tích thời điểm đến (arrival time)</strong>,
+không thấy khi đếm sơ đồ khối — và chính là lý do phải tin STA thay vì tin phép tính tay.</p>
+<p><strong>③ Nguyên nhân thứ ba — thư viện quyết định "một tầng" rộng bao nhiêu.</strong>
+Thư viện <code>sky130_fd_sc_hd</code> có sẵn <code>xor3_1</code> và <code>maj3_1</code>, nên <strong>mỗi full adder gói gọn trong
+1 tầng cell</strong> thay vì 2–3 tầng cổng cơ bản. Nếu thư viện không có hai cell đó, con số thực
+tế sẽ <strong>lớn hơn 5</strong>. Nói cách khác: "số tầng logic thực tế" không phải thuộc tính của thuật
+toán — nó là thuộc tính của <strong>cặp (thuật toán, thư viện)</strong>.</p>
+<h3 id="ket-luan-cho-charter-muc-9">Kết luận cho Charter mục 9</h3>
+<blockquote>
+<p>Con số thực tế lớn hơn lý thuyết vì <strong>lý thuyết đếm tầng của cây, còn STA đếm tầng của
+cổng</strong>, mà mỗi tầng cây từ số 2 trở đi lại chứa một chuỗi carry riêng bên trong. Ở A08,
+chênh lệch là <strong>3 → 5 tầng</strong>, tức <strong>+67 %</strong>.</p>
+<p>Chênh lệch <strong>không</strong> phải hằng số: ước lượng từ cấu trúc cho 6, đo thật cho 5, và bản
+flatten cho 4. Ba con số khác nhau cho cùng một thuật toán — con số duy nhất được phép
+trích dẫn là con số của <strong>chính netlist nộp bài</strong>, tức <strong>5</strong>.</p>
+</blockquote>
+<h2 id="9-nhung-cho-sinh-vien-hay-sai-va-cach-phat-hien">9. Những chỗ sinh viên hay sai và cách phát hiện</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Sai lầm</th>
+<th>Hậu quả</th>
+<th>Phát hiện bằng bằng chứng nào</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Viết <code>assign ones = $countones(a);</code> cho gọn</td>
+<td>Mất kiến trúc; không đếm được tầng; mục 2 và mục 9 không trả lời được</td>
+<td>Đọc RTL; bảng phân cấp Yosys không còn <code>a08_add2</code>/<code>a08_add3</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Viết vòng <code>for</code> ở mức hành vi (<code>ones += a[i]</code>)</td>
+<td><strong>Chỗ Charter mục 10 gọi đích danh.</strong> Công cụ tự chọn kiến trúc, netlist không đọc được</td>
+<td>Đọc RTL; netlist không có cấu trúc 4→2→1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Cho kết quả 3 bit vì "8 bit thì 3 bit đủ"</td>
+<td>Sai đúng 1 trong 256 vector (<code>0xFF</code> → ra 0)</td>
+<td>TC-002; và quét vét cạn bắt ngay</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Nhầm <code>{c,s}</code> của half adder là hai thứ riêng, không phải một số 2-bit</td>
+<td>Nối sai độ rộng vào tầng 2</td>
+<td>INV-1 trong testbench: <code>dut.l1_0 !== a[0]+a[1]</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Dùng full adder ở vị trí 0 rồi nối <code>cin = 0</code></td>
+<td>Lãng phí 18,768 µm² mỗi chỗ, × 3 chỗ</td>
+<td>So bảng cell: sẽ thấy dư <code>xor3_1</code>/<code>maj3_1</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Tưởng "3 tầng" nghĩa là "3 cổng"</td>
+<td>Kết luận sai về độ trễ</td>
+<td>STA: 5 cell trên đường tới hạn, không phải 3</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Nghĩ <code>0xFF</code> là ca chậm nhất vì "nhiều bit 1 nhất"</td>
+<td>Chọn sai vector đo timing</td>
+<td>STA chỉ đường tới hạn xuất phát từ <code>a[6]</code>; số bit 1 <strong>không</strong> quyết định độ trễ trong mạch tổ hợp — mọi vector đều đi qua cùng một mạng cổng</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Kết luận "mô phỏng PASS ⟹ kiến trúc đúng"</td>
+<td>Kiểm chứng chức năng mù về cấu trúc</td>
+<td>Một dòng <code>$countones</code> cũng PASS 256/256. Bằng chứng cấu trúc là INV-1 + bảng phân cấp</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Đặt thanh ghi chốt kết quả <strong>vào trong</strong> A08</td>
+<td>Đổi loại mạch sang Tuần tự, vi phạm mục 10</td>
+<td><code>synth_stat.txt</code> có cell <code>dfxtp</code>; <code>report_power</code> có nhóm Sequential ≠ 0 % — <strong>đây đúng là lỗi của gói nguồn ban đầu</strong></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Dùng waveform hành vi để nói về độ trễ</td>
+<td>Waveform hành vi là zero-delay</td>
+<td>Mở <code>a08_waves.vcd</code>: mọi tín hiệu đổi tức thời tại <code>#1</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Diễn giải "slack 8,69 ns / period 10 ns" thành "chạy được ở 100 MHz"</td>
+<td>Khẳng định vượt mức</td>
+<td><code>vclk</code> là <strong>clock ảo</strong>, chỉ là mốc quy chiếu; A08 không có clock</td>
+</tr>
+<tr>
+<td>12</td>
+<td>So số cell của A08 với đề khác để kết luận "đề này khó hơn"</td>
+<td>Hai đề có thể chạy môi trường/flow khác</td>
+<td><code>tradeoff.md</code> §2 — điều kiện tạo bằng chứng</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Tin rằng cây cộng luôn nhỏ hơn chuỗi thẳng</td>
+<td>Ngược với số đo trong flow nộp bài</td>
+<td>§7 câu 3: 240,23 so với 201,44 µm² — cây cộng <strong>lớn hơn</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="10-cau-hoi-mentor-nen-dat-khi-bao-ve">10. Câu hỏi mentor nên đặt khi bảo vệ</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Câu hỏi</th>
+<th>Đáp án mong đợi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Vì sao khối này có đúng 0 flip-flop?</td>
+<td>Vì là mạch tổ hợp: <code>ones</code> chỉ là hàm của <code>a</code> hiện tại. Thanh ghi chốt nằm <strong>ngoài</strong> A08. Xác nhận hai nguồn: bảng cell Yosys và <code>report_power</code> (Sequential 0 %).</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Cây cộng có mấy tầng, mỗi tầng làm gì?</td>
+<td>3 tầng: 4 bộ cộng 1-bit (8 bit → 4 số 0…2), 2 bộ cộng 2-bit (→ 2 số 0…4, chính là popcount nửa thấp và nửa cao), 1 bộ cộng 3-bit (→ 1 số 0…8).</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Vì sao kết quả 4 bit chứ không 3?</td>
+<td>Vì có 9 giá trị khả dĩ (<code>0…8</code>), 3 bit chỉ chứa 8. Công thức <code>⌈log₂(N+1)⌉</code>. Lỗi này chỉ lộ ở <strong>1/256</strong> vector — đó là <code>0xFF</code>.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Bạn nói cây sâu 3 tầng, nhưng STA cho 5 cell. Mâu thuẫn ở đâu?</td>
+<td>Không mâu thuẫn: 3 đếm tầng <strong>cây</strong>, 5 đếm tầng <strong>cổng</strong>. Tầng 2 và 3 tự chúng là bộ cộng ripple có chuỗi carry bên trong.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Sao không phải 6 (= 1+2+3) mà là 5?</td>
+<td>Vì bit thấp của mỗi tổng riêng phần ra sớm hơn bit cao một tầng, nên chuỗi carry của <code>add3</code> khởi động sớm. Chỉ thấy được khi phân tích arrival time.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>{c, s}</code> của half adder là gì?</td>
+<td><strong>Một số nhị phân 2 bit</strong> trong dải 0…2, không phải hai tín hiệu rời. Giá trị <code>11 = 3</code> không bao giờ xảy ra.</td>
+</tr>
+<tr>
+<td>7</td>
+<td>256/256 PASS — điều này chứng minh mạch là cây cộng chưa?</td>
+<td>Chưa. Kiểm chứng chức năng mù về cấu trúc. Bằng chứng cấu trúc là INV-1 (testbench đọc thẳng <code>l1_*</code>, <code>l2_*</code>) và bảng phân cấp Yosys.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Vector nào là ca chậm nhất?</td>
+<td><strong>Câu hỏi này sai tiền đề</strong> với mạch tổ hợp: mọi vector đi qua cùng một mạng cổng. Cái tồn tại là <strong>đường</strong> tới hạn (<code>a[6] → ones[3]</code>), không phải <strong>vector</strong> tới hạn.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Cây cộng nhỏ hơn chuỗi thẳng bao nhiêu?</td>
+<td>Trong flow nộp bài nó <strong>lớn hơn 19,3 %</strong> (240,23 so với 201,44 µm²). Nó <strong>nhanh hơn 25,1 %</strong>. Nếu flatten thì đảo dấu: nhỏ hơn 27,6 %.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Vì sao netlist giữ phân cấp lại to hơn netlist phẳng tới 31,8 %?</td>
+<td>Vì <code>abc</code> tối ưu từng module một; mỗi half/full adder chỉ có 2 cổng nên không còn gì để tối ưu, và nó buộc phải dùng <code>xor3_1</code> đắt (23,77 µm², chiếm 39,6 % diện tích). Flatten cho phép tái cấu trúc qua biên module.</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Con số 1,31 ns có phải độ trễ thật của chip không?</td>
+<td>Không. Độ trễ <strong>sau tổng hợp</strong>, một góc PVT, chưa có RC dây. Sau routing sẽ lớn hơn.</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Vì sao 4 bit ra không ổn định cùng lúc?</td>
+<td>Vì chúng ở độ sâu khác nhau: <code>ones[0]</code> @0,49 ns, <code>ones[3]</code> @1,31 ns. Giữa hai mốc đó <code>ones</code> mang giá trị không có ý nghĩa — vùng glitch. Tầng trên phải lấy mẫu sau 1,31 ns.</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Gói nguồn ban đầu sai thế nào, và bạn phát hiện ra sao?</td>
+<td>Nó là <code>a08_register</code> — một thanh ghi 8-bit, mạch <strong>tuần tự</strong>, 8 FF. Phát hiện bằng đối chiếu tên top module với Charter, và bằng con số flip-flop ≠ 0 trong bảng cell. Bản gốc đóng băng ở <code>08_ORIGINAL_SOURCE/</code>.</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Nếu cho phép thêm ô nhớ, bạn pipeline ở đâu?</td>
+<td>Giữa tầng 2 và tầng 3 (cắt cân nhất: 3 tầng cell mỗi chặng, +6 FF). Nhưng làm vậy là đổi loại mạch, vi phạm Charter mục 10.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="11-gioi-han-da-chung-minh-duoc-gi-chua-chung-minh-duoc-gi">11. Giới hạn: đã chứng minh được gì, chưa chứng minh được gì</h2>
+<h3 id="da-chung-minh">Đã chứng minh</h3>
+<ol>
+<li>Hàm của A08 đúng trên <strong>toàn bộ</strong> không gian đầu vào (256/256, 0 lỗi).</li>
+<li>Ba hiện thực độc lập (Python, 2 golden model SV, RTL) đồng ý với nhau.</li>
+<li>Sáu bất biến INV-1…INV-6 luôn giữ (0 vi phạm / 266 vector).</li>
+<li><strong>Cấu trúc</strong> đúng hình dạng Charter mục 10 — kiểm bằng INV-1 đọc thẳng net nội bộ, và
+   xác nhận độc lập bằng bảng phân cấp Yosys (<code>4 × half_adder</code>, <code>2 × add2</code>, <code>1 × add3</code>).</li>
+<li><strong>0 ô nhớ</strong> — xác nhận bởi hai bằng chứng độc lập (bảng cell + báo cáo công suất).</li>
+<li>Thiết kế <strong>nhỏ</strong>: 22 cell · 240,2304 µm², thấp hơn ước lượng 90–140 cell của Charter.</li>
+<li>Độ sâu logic thực tế là <strong>5 tầng cell</strong> so với <strong>3 tầng lý thuyết</strong> — hai công cụ độc
+   lập (Yosys <code>ltp</code>, OpenSTA) cho cùng con số.</li>
+<li>Độ trễ tổ hợp <strong>1,31 ns</strong> so với đường nhanh nhất <strong>0,29 ns</strong> trên cùng netlist.</li>
+<li>Cây cộng <strong>nhanh hơn</strong> chuỗi thẳng trong cả hai flow đã thử (25,1 % và 50,0 %).</li>
+</ol>
+<h3 id="chua-chung-minh">Chưa chứng minh</h3>
+<ol>
+<li>Netlist tương đương RTL về chức năng — cần mô phỏng gate-level.</li>
+<li>Cấu trúc cây cộng còn giữ được sau khi ánh xạ cell — INV-1 mới kiểm ở mức RTL.</li>
+<li>Độ trễ <strong>thật sau routing</strong> — 1,31 ns chưa tính ký sinh dây.</li>
+<li>Biên an toàn qua các góc PVT — mới chạy <code>tt_025C_1v80</code>.</li>
+<li>Công suất thật của ứng dụng — 17,5 µW dùng activity mặc định, không lấy từ VCD.</li>
+<li>Lợi thế diện tích của biến thể chuỗi thẳng có còn không khi cấm nhóm cell <code>lpflow_*</code>
+   (nằm trong <code>dont_use</code> của LibreLane) — chưa đo lại được.</li>
+<li>Layout tuân thủ quy tắc chế tạo (DRC), khớp netlist (LVS), và có file GDSII.</li>
+<li>Các báo cáo trong <code>06_GDSII/</code> hiện <strong>vẫn là của thiết kế cũ</strong> và phải được sinh lại.</li>
+</ol>
+<h3 id="ngoai-pham-vi-khong-duoc-khang-dinh">Ngoài phạm vi — không được khẳng định</h3>
+<p>"Đã sign-off", "đã tape-out", "đã chế tạo", "đã kiểm tra sau chế tạo", "chạy được ở XXX MHz".
+Charter mục 3 loại tất cả khỏi phạm vi, cùng với đếm bit 1 trên dữ liệu rộng hơn 8 bit và
+đếm bit 0 liên tiếp (CLZ).</p>
+<hr>
+<p><em>Phiên bản: v2.0 · Ngày: 2026-09-24</em>
+<em>v2.0 = thiết kế lại đúng đề Charter sau sự cố lệch nguồn — xem <code>05_VERIFICATION/known_issues.md</code>.</em></p>
+</main>
+<footer class="doc">
+  Tài liệu sinh từ <code>implementation-notes_A08.md</code>.
+  Mọi số liệu đều kèm công cụ, phiên bản và lệnh tái lập trong
+  <code>07_TRACEABILITY/evidence_index.md</code>.
+</footer>
+</div>
+<script>
+(function(){
+  var b=document.createElement('button');
+  b.className='themebtn'; b.type='button';
+  function lbl(){var t=document.documentElement.getAttribute('data-theme');
+    return t==='dark'?'Nen sang':(t==='light'?'Nen toi':'Doi nen');}
+  b.textContent=lbl();
+  try{var s=localStorage.getItem('rtl2gds-theme'); if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}
+  b.textContent=lbl();
+  b.addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var mq=window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next=cur?(cur==='dark'?'light':'dark'):(mq?'light':'dark');
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem('rtl2gds-theme',next);}catch(e){}
+    b.textContent=lbl();
+  });
+  document.body.appendChild(b);
+})();
+</script>
+</body>
+</html>

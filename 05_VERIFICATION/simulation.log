@@ -1,0 +1,54 @@
+VCD info: dumpfile a08_waves.vcd opened for output.
+======================================================================
+  A08 . TESTBENCH - Bo dem so bit 1 (population count) 8-bit
+  DUT: a08_popcount8   Chuan: a08_reference + a08_reference_sum
+======================================================================
+
+[1a] Ca bat buoc cua Charter muc 8
+----------------------------------------------------------------------
+  TC-001 bien duoi tuyet doi       A=00000000 | l1=0000 l2=00 | ones=0  [PASS]
+  TC-002 bien tren tuyet doi       A=11111111 | l1=2222 l2=44 | ones=8  [PASS]
+  TC-003 nua thap day              A=00001111 | l1=0022 l2=04 | ones=4  [PASS]
+  TC-004 mau xen ke                A=10101010 | l1=1111 l2=22 | ones=4  [PASS]
+  TC-005 mot bit o vi tri cao nhat A=10000000 | l1=1000 l2=10 | ones=1  [PASS]
+
+[1b] Ca tu xay dung - co ca bien
+----------------------------------------------------------------------
+  TC-006 BIEN mot bit o vi tri 0   A=00000001 | l1=0001 l2=01 | ones=1  [PASS]
+  TC-007 nua cao day               A=11110000 | l1=2200 l2=40 | ones=4  [PASS]
+  TC-008 mau xen ke nghich         A=01010101 | l1=1111 l2=22 | ones=4  [PASS]
+  TC-009 BIEN 7 bit 1, tat bit 0   A=01111111 | l1=1222 l2=34 | ones=7  [PASS]
+  TC-010 BIEN 7 bit 1, tat bit 7   A=11111110 | l1=2221 l2=43 | ones=7  [PASS]
+
+  Vector co ten da chay: 10
+
+[2] Quet vet can toan bo khong gian dau vao (2^8 = 256 gia tri)
+----------------------------------------------------------------------
+  Da quet: 256/256 gia tri, sai lech: 0
+
+[3b] Bat bien tren toan bo khong gian
+----------------------------------------------------------------------
+  INV-5 phan bo do duoc : 1 8 28 56 70 56 28 8 1
+        he so C(8,k)    : 1 8 28 56 70 56 28 8 1
+        ==> KHOP
+  INV-3 ones(A) + ones(~A) = 8 : dung tren ca 256 gia tri
+
+[4] INV-7 - khong phu thuoc lich su dau vao
+----------------------------------------------------------------------
+  A=0xAA sau lich su 0x00 -> ones=4
+  A=0xAA sau lich su 0xFF -> ones=4
+  ==> khong phu thuoc lich su : DUNG (mach to hop thuan)
+
+======================================================================
+  TONG KET A08
+======================================================================
+  Vector co ten            : 10
+  Vector quet vet can      : 256/256
+  TONG SO VECTOR           : 266
+  Sai lech so voi chuan    : 0
+  Lan kiem bat bien        : 1322
+  Vi pham bat bien         : 0
+  Flip-flop trong RTL      : 0 (khong co always_ff, khong co clk/rst)
+
+  KET QUA A08: PASS - 266 vector, 0 sai lech, 1322 lan kiem bat bien, 0 vi pham
+05_VERIFICATION/testbench/a08_tb.sv:405: $finish called at 782000 (1ps)

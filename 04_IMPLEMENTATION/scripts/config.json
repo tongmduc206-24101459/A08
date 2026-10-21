@@ -1,0 +1,38 @@
+{
+  "project_id": "A08",
+  "title": "Bộ đếm số bit 1 (population count) 8-bit",
+  "group": "A · Số học tổ hợp",
+  "difficulty": "Trung bình",
+  "circuit_type": "Tổ hợp",
+  "charter_scale": "~90–140 cell · 1×1 tile",
+  "top_module": "a08_popcount8",
+  "clock_port": null,
+  "has_clock": false,
+  "expected_ff_zero": true,
+  "technology": "sky130A",
+  "std_cell_library": "sky130_fd_sc_hd",
+  "liberty_corner": "tt_025C_1v80",
+  "flow": "LibreLane/OpenROAD",
+  "measured": {
+    "sim": "PASS",
+    "pyref": "PASS",
+    "synth": "PASS",
+    "sta": "PASS",
+    "cells": 22,
+    "flip_flops": 0,
+    "area_um2": 240.2304,
+    "critical_path_ns": 1.31,
+    "startpoint": "a[6]",
+    "endpoint": "ones[3]",
+    "power_total_w": "1.75e-05"
+  },
+  "not_run": [
+    "floorplan",
+    "placement",
+    "routing",
+    "drc",
+    "lvs",
+    "gds"
+  ],
+  "source_dir_origin": "A08_Register_Implementation_Validation"
+}
