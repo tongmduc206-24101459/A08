@@ -1,0 +1,31 @@
+name: A08 RTL Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  rtl-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+
+      - name: Check project files
+        run: |
+          test -f 04_IMPLEMENTATION/rtl/a08_popcount8.sv
+          test -f 04_IMPLEMENTATION/rtl/a08_adders.sv
+          find 05_VERIFICATION -type f
+
+      - name: Run RTL simulation
+        run: |
+          bash 04_IMPLEMENTATION/scripts/01_run_sim.sh
