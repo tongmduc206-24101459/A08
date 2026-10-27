@@ -1,0 +1,40 @@
+name: A08 RTL Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  rtl-simulation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+
+      - name: Run RTL simulation
+        run: bash 04_IMPLEMENTATION/scripts/01_run_sim.sh
+
+      - name: Check verification result
+        run: |
+          test -f 05_VERIFICATION/simulation.log
+          grep -F "KET QUA A08: PASS" 05_VERIFICATION/simulation.log
+          grep -E "0 sai lech" 05_VERIFICATION/simulation.log
+
+      - name: Upload simulation log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a08-simulation-log
+          path: |
+            05_VERIFICATION/simulation.log
+            05_VERIFICATION/tool_versions.txt
+          if-no-files-found: ignore
